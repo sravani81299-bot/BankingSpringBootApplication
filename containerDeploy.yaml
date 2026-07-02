@@ -1,0 +1,19 @@
+- name : Deploy Pods on Docker Container
+  hosts : all
+  tasks : 
+  - name: Apt Update
+    apt:
+      update_cache: yes
+
+  - name: Install Docker
+    apt: name=docker.io state=latest
+
+  - name: Remove Existing Container
+    command: "docker rm {{ containerName }}"
+    ignore_errors: true
+
+  - name: Performing Deployment of {{ dockerImageTag }}
+    command: "docker run -d --name {{ containerName }} -p {{ httpPort }}:{{ httpPort }} docker.io/{{ dockerImageTag }}"
+
+  - name: Get Container List
+    command: "docker ps"

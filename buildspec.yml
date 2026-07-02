@@ -1,0 +1,39 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto8
+
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 021931576701.dkr.ecr.ap-south-1.amazonaws.com
+
+  build:
+    commands:
+      - echo "Checking Java and Maven versions..."
+      - java -version
+      - mvn -version
+      
+      - echo "Listing directory contents to verify files are present..."
+      - ls -la
+      
+      - echo "Building the Maven project..."
+      - mvn clean package -DskipTests
+      
+      - echo "Listing target directory to verify JAR creation..."
+      - ls -lh target/
+      
+      - echo "Building the Docker image..."
+      - docker build -t $ImageName .
+
+  post_build:
+    commands:
+      - echo "Tagging the Docker image..."
+      - docker tag $ImageName:latest 021931576701.dkr.ecr.ap-south-1.amazonaws.com/$ImageName:latest
+      
+      - echo "Pushing the Docker image to ECR..."
+      - docker push 021931576701.dkr.ecr.ap-south-1.amazonaws.com/$ImageName:latest
+      
+      - echo "Build completed on `date`"
